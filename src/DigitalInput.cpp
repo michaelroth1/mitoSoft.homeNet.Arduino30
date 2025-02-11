@@ -1,4 +1,4 @@
-#include "MitoSoft.h"
+#include "MitoSoftOpto.h"
 
 DigitalInput::DigitalInput(int pin, int mode) {
 	this->_pin = pin; // wir merken uns die Pins für die spätere Verwendung
