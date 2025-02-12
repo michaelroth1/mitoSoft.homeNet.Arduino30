@@ -1,4 +1,4 @@
-#include "MitoSoftOpto.h"
+#include "MitoSoftOpta.h"
 
 byte DebouncingInput::getByteState() {
 	byte newReading = digitalRead(_pin);

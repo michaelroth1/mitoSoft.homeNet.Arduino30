@@ -1,6 +1,5 @@
-
-#ifndef MitoSoft_h
-#define MitoSoft_h
+#ifndef MitoSoftOpta_h
+#define MitoSoftOpta_h
 
 #include "Arduino.h"
 #include <SPI.h>
@@ -109,7 +108,7 @@ private:
 	double _runToPosAfterRefRunDouble = -1.0;
 	double _finPosAfterRun = -1.0;
 	double _finPosAfterRefRun = -1.0;
- 
+
 	int _upPin = 0;
 	int _downPin = 0;
 	InvertableOutput* _up;
@@ -121,8 +120,8 @@ private:
 	bool _hasStopped = false; //Event 'stopped' 
 	bool _hasStarted = false; //Event 'started' 
 	bool _running = false; //Event 'running' 
-    bool _writeLog = true;
- 
+	bool _writeLog = true;
+
 	unsigned long _lastReferenceRun = 0;
 	unsigned long _shutterRunTime = 0;
 	unsigned long _finOpenTime = 0;
@@ -142,11 +141,11 @@ private:
 	double CalculateShutterCorrection(double finStartPos, double finEndPos);
 
 	void SetVariablesToInitValue();
-    
+
 	void writeSerial(String text);
-	
+
 	void stop();
- 
+
 public:
 
 	ShutterController(unsigned long maxRunTime, unsigned long finOpenTime = 0, double upReferencePos = -2.0, double downReferencePos = 102.0, int reverseTime = 500, bool writeLog = false);
@@ -178,7 +177,7 @@ public:
 	bool stopped();
 
 	bool started();
-	
+
 	bool running();
 
 	bool isReferenceRun();
@@ -198,23 +197,23 @@ private:
 	MqttClient* _mqttClient = nullptr;
 
 	bool _writeLog;
-    String _topic;
+	String _topic;
 	String _message;
-	
+
 	String _clientId;
-	IPAddress _brokerIP;	
-    
+	IPAddress _brokerIP;
+
 	unsigned long _pollingInterval = 10000;
 	unsigned long _actualTime = 0;
 	unsigned long _reconnectionTime = 3000;
 
-    bool _onConnected;
+	bool _onConnected;
 	bool _onMessageReceived;
-	
+
 	void writeSerial(String text);
-	
-	void messageReceived(); 
-	
+
+	void messageReceived();
+
 	bool connect();
 public:
 
@@ -228,13 +227,47 @@ public:
 
 	void publish(String topic, String message, bool retain = false);
 
-    void subscribe(String topic);
-	
+	void subscribe(String topic);
+
 	void loop();
-	
+
 	bool onMessageReceived(); //Event
-	
+
 	bool onConnected(); //Event
+};
+
+// Note: Local domain names (e.g. "Computer.local" on OSX) are not supported by Arduino.
+// You need to set the IP address directly.
+class EthernetHelper {
+
+private:
+
+	const int DHCP = 1;
+	const int FIXIP = 2;
+
+	int _mode = FIXIP;
+
+	byte* _mac;
+	IPAddress _ip;
+
+	bool _writeLog;
+
+	void writeSerial(String text);
+
+	void disableSDCard();
+
+	void check();
+
+	String ipToString(IPAddress ip);
+public:
+
+	EthernetHelper(byte mac[6], IPAddress ip, bool writeLog = false);
+
+	void fixIpSetup();
+
+	void dhcpSetup();
+
+	void loop();
 };
 
 #endif

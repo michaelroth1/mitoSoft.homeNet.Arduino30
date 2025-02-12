@@ -1,4 +1,4 @@
-#include "MitoSoftOpto.h"
+#include "MitoSoftOpta.h"
 
 //https://github.com/arduino-libraries/ArduinoMqttClient
 MqttHelper::MqttHelper(MqttClient& client, unsigned long reconnectionTime, bool writeLog) {
