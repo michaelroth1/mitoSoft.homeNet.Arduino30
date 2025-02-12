@@ -1,4 +1,4 @@
-#include "MitoSoftOpta.h"
+#include "MitoSoft.h"
 
 ShutterController::ShutterController(unsigned long maxRunTime, unsigned long finOpenTime, double upReferencePos, double downReferencePos, int reverseTime, bool writeLog) {
 	_shutterRunTime = maxRunTime;

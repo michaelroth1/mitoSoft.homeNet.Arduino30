@@ -1,5 +1,5 @@
-#ifndef MitoSoftOpta_h
-#define MitoSoftOpta_h
+#ifndef MitoSoft_h
+#define MitoSoft_h
 
 #include "Arduino.h"
 #include <SPI.h>

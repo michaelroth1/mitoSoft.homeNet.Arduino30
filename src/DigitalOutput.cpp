@@ -1,4 +1,4 @@
-#include "MitoSoftOpta.h"
+#include "MitoSoft.h"
 
 DigitalOutput::DigitalOutput(int pin, int mode) {
 	// wir merken uns die Pins für die spätere Verwendung

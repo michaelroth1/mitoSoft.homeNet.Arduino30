@@ -1,4 +1,4 @@
-#include "MitoSoftOpta.h"
+#include "MitoSoft.h"
 
 InvertableOutput::InvertableOutput(int pin, int mode) {
 	this->_pin = pin;
