@@ -215,11 +215,12 @@ private:
 	void messageReceived();
 
 	bool connect();
+
 public:
 
 	MqttHelper(MqttClient& client, unsigned long reconnectionTime = 15000, bool writeLog = false);
 
-	void init(IPAddress broker, String clientId);
+	void init(IPAddress broker, String clientId, String user = "", String password = "");
 
 	String getLastTopic();
 
