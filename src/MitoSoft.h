@@ -56,12 +56,15 @@ class DigitalOutput {
 private:
 
 	int _state = 0;
+	int _oldState = 0;
 	int _pin = 0;
 	InvertableOutput* _invertableOutput = nullptr;
 
 public:
 
 	DigitalOutput(int pin, int mode = STANDARD);
+
+	bool isToggled();
 
 	int toggle();
 

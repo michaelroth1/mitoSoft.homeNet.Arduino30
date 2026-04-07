@@ -20,6 +20,15 @@ int DigitalOutput::toggle() {
 	return _state;
 }
 
+bool DigitalOutput::isToggled() {
+	if (_state != _oldState) {
+		this->_oldState = _state;
+		return true;
+	}
+
+	return false;
+}
+
 int DigitalOutput::setOn() {
 	setState(HIGH);
 	return HIGH;
@@ -31,7 +40,8 @@ int DigitalOutput::setOff() {
 }
 
 void DigitalOutput::setState(int mode) {
-	_state = mode;
+	this->_state = mode;
+	this->_oldState = mode;
 	if (mode == LOW) {
 		_invertableOutput->setOff();
 	}
