@@ -19,7 +19,10 @@ byte DebouncingInput::getByteState() {
 DebouncingInput::DebouncingInput(byte pin, int mode, unsigned long debounceTime) {
 	this->_pin = pin;
 	this->_pinMode = mode;
-	_lastReading = LOW;
+	this->_lastReading = LOW;
+	this->_state = LOW;
+	this->_lastPosState = false;
+	this->_lastNegState = false;
 	this->_debounceTime = debounceTime;
 
 	pinMode(_pin, _pinMode);
