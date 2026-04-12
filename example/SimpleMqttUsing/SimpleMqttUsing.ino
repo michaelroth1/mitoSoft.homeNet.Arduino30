@@ -9,18 +9,19 @@
 
 // network configuration
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress ip(192, 168, 2, 200);
 IPAddress broker(192, 168, 2, 125);
 
 EthernetClient ethClient;
-EthernetHelper ethHelper(mac);
+EthernetHelper ethHelper(mac, ip, false);
 MqttClient mqttClient(ethClient);
-MqttHelper mqttHelper(mqttClient);
+MqttHelper mqttHelper(mqttClient, 15000, false);
 
 // single cover and light
 ShutterController cover(20000, 0);
 DigitalOutput coverUp(5, STANDARD);
 DigitalOutput coverDown(6, STANDARD);
-DigitalOutput lightOut(8, INVERTED);
+LightController lightOut(8, INVERTED);
 
 void setup() {
   ethHelper.dhcpSetup();
@@ -49,9 +50,17 @@ void loop() {
 
   // light via MQTT
   if (topic == "SimpleMqttUsing/light/command/mode") {
-    if (message == "toggle") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.toggle()), true);
-    else if (message == "on") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.setOn()), true);
-    else if (message == "off") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.setOff()), true);
+    if (message == "toggle") {
+      mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.toggle()), true);
+    }
+    else if (message == "on") {
+      lightOut.setOn();
+      mqttHelper.publish("SimpleMqttUsing/light/state/mode", "1", true);
+    }
+    else if (message == "off") {
+      lightOut.setOff();
+      mqttHelper.publish("SimpleMqttUsing/light/state/mode", "0", true);
+    }
   }
 
   // publish cover state when stopped
@@ -61,6 +70,7 @@ void loop() {
   }
 
   cover.loop();
+  lightOut.loop();
 
   if (mqttHelper.onConnected()) mqttHelper.subscribe("SimpleMqttUsing/+/command/#");
   ethHelper.loop();

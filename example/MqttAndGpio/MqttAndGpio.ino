@@ -26,7 +26,7 @@ DigitalOutput coverDown(6, STANDARD);
 
 // light
 DebouncingInput lightBtn(7);
-DigitalOutput lightOut(8, INVERTED);
+LightController lightOut(8, INVERTED);
 
 void setup() {
   ethHelper.fixIpSetup();
@@ -73,6 +73,7 @@ void loop() {
   }
 
   cover.loop();
+  lightOut.loop();
 
   if (mqttHelper.onConnected()) mqttHelper.subscribe("MqttAndGpio/+/command/#");
   ethHelper.loop();
