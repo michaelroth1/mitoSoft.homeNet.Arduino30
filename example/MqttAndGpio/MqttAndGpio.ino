@@ -1,137 +1,81 @@
 /*
-  Name:    MqttAndGpio.ino
-  Created: 2/5/2020 10:32:36 PM
-  Author:  Jeff
+  Name: MqttAndGpio.ino
+  Short example: one cover (shutter) and one light with MQTT+GPIO
 */
 
 #include <SPI.h>
 #include <Ethernet.h>
-#include <PubSubClient.h>
 #include <MitoSoft.h>
-#include <StringHelper.h>
-#include <ArduinoMqttClient.h>
 
-// Network-Configuration
-byte mac[] = <your mac adress> //{ 0xA8, 0x61, 0x0A, 0xAE, 0x16, 0x3D };
-IPAddress ip<your ip adress> //(192, 168, 1, 200);
-IPAddress broker<your broker adress> //(192, 168, 1, 100);
-
-EthernetHelper ethHelper(mac);
+// network configuration (adjust to your network)
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress ip(192, 168, 2, 200);
+IPAddress broker(192, 168, 2, 125);
 
 EthernetClient ethClient;
-PubSubClient client(broker, 1883, ethClient);
-PubSubHelper mqttHelper(client, 15000, true);
+EthernetHelper ethHelper(mac, ip, false);
+MqttClient mqttClient(ethClient);
+MqttHelper mqttHelper(mqttClient, 15000, false);
 
-//DebouncingInput emergencyUp(22); //e.g. windmeter
-DebouncingInput shutterDownTaster(23);
-DebouncingInput shutterUpTaster(24);
-ShutterController shutter(25000, 0, -5.0, 105.0, 500, true);
-InvertableOutput shutterUp(44, STANDARD); //INVERTED
-InvertableOutput shutterDown(45, STANDARD); //INVERTED
+// cover
+DebouncingInput coverBtnDown(2);
+DebouncingInput coverBtnUp(3);
+ShutterController cover(20000, 0);
+DigitalOutput coverUp(5, STANDARD);
+DigitalOutput coverDown(6, STANDARD);
 
-DebouncingInput lightButton(25);
-DigitalOutput light(46, INVERTED);
+// light
+DebouncingInput lightBtn(7);
+DigitalOutput lightOut(8, INVERTED);
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("start");
-   
-  ethHelper.fixIpSetup(ip);
-
-  mqttHelper.init("TestController");
-
-  shutter.referenceRun();
-  
-  mqttHelper.publish("TestController/light/state/mode", "0", true);
+  ethHelper.fixIpSetup();
+  mqttHelper.init(broker, "MqttAndGpio", "user", "passwd");
+  cover.referenceRun();
 }
 
 void loop() {
   String topic = "";
   String message = "";
-  
-  if (mqttHelper.onMessageReceived()){
+  if (mqttHelper.onMessageReceived()) {
     topic = mqttHelper.getLastTopic();
     message = mqttHelper.getLastMessage();
   }
-  
-  //***********************************************************************************************************
-  //Shutter
-  //
-  if (shutterDownTaster.risingEdge()) {
-    shutter.runDown();
-  }
-  else if (topic == "TestController/shutter/command/mode" && message == "down") {
-    shutter.runDown();
-  }
-  else if (shutterUpTaster.risingEdge()) {
-    shutter.runUp();
-  }
-  else if (topic == "TestController/shutter/command/mode" && message == "up") {
-    shutter.runUp();
-  }
-  else if (topic == "TestController/shutter/command/mode" && message == "stop") {
-    shutter.runStop();
-  }
-  else if (topic == "TestController/shutter/command/pos") {
-    //double shutterPos = StringHelper().split(message, ';', 0).toDouble();
-    //double finPos = StringHelper().split(message, ';', 1).toDouble();
-    //shutter.setShutterAndFinPosition(shutterPos, finPos);
-    shutter.setShutterPosition(message.toDouble());
+
+  // cover control (buttons or MQTT)
+  if (coverBtnDown.risingEdge() || (topic == "MqttAndGpio/cover/command/mode" && message == "down")) {
+    cover.runDown();
+  } else if (coverBtnUp.risingEdge() || (topic == "MqttAndGpio/cover/command/mode" && message == "up")) {
+    cover.runUp();
+  } else if (topic == "MqttAndGpio/cover/command/pos") {
+    cover.setShutterPosition(message.toDouble());
   }
 
-  if (shutter.started()) {
-    if (1 == shutter.getDirection()) { //DOWN
-      shutterUp.setOff();
-      shutterDown.setOn();
-      mqttHelper.publish("TestController/shutter/state/mode", "closing", false); //state_closing:
-    }
-    else if (2 == shutter.getDirection()) { //UP
-      shutterUp.setOn();
-      shutterDown.setOff();
-      mqttHelper.publish("TestController/shutter/state/mode", "opening", false); //state_opening:
+  // light control (button or MQTT)
+  if (lightBtn.risingEdge() || (topic == "MqttAndGpio/light/command/mode" && message == "toggle")) {
+    mqttHelper.publish("MqttAndGpio/light/state/mode", String(lightOut.toggle()), true);
+  }
+
+  // publish cover state
+  if (cover.started()) {
+    if (1 == cover.getDirection()) { // DOWN
+      coverUp.setOff(); coverDown.setOn();
+      mqttHelper.publish("MqttAndGpio/cover/state/mode", "closing", false);
+    } else if (2 == cover.getDirection()) { // UP
+      coverUp.setOn(); coverDown.setOff();
+      mqttHelper.publish("MqttAndGpio/cover/state/mode", "opening", false);
     }
   }
-
-  if(shutter.running()) {
-      mqttHelper.publish("TestController/shutter/state/pos", String(shutter.getPosition()), true);
+  if (cover.stopped()) {
+    coverUp.setOff(); coverDown.setOff();
+    mqttHelper.publish("MqttAndGpio/cover/state/mode", "stopped", false);
+    mqttHelper.publish("MqttAndGpio/cover/state/pos", String(cover.getPosition()), true);
   }
 
-  if (shutter.stopped()) {
-    shutterUp.setOff();
-    shutterDown.setOff();
-    mqttHelper.publish("TestController/shutter/state/mode", "stopped", false);
-    mqttHelper.publish("TestController/shutter/state/pos", String(shutter.getPosition()), true);
-    if (0.0 >= shutter.getPosition()) { 
-      mqttHelper.publish("TestController/shutter/state/mode", "opened", false);
-    }
-    else if (100.0 <= shutter.getPosition()) {
-      mqttHelper.publish("TestController/shutter/state/mode", "closed", false);
-    }
-  }
+  cover.loop();
 
-  //***********************************************************************************************************
-  //Light
-  //
-  if (lightButton.risingEdge()) {
-    mqttHelper.publish("TestController/light/state/mode", String(light.toggle()), true);
-  }
-  else if (topic == "TestController/light/command/mode" && message == "toggle") {
-    mqttHelper.publish("TestController/light/state/mode", String(light.toggle()), true);
-  }
-  else if (topic == "TestController/light/command/mode" && message == "on") {
-    mqttHelper.publish("TestController/light/state/mode", String(light.setOn()), true);
-  }
-  else if (topic == "TestController/light/command/mode" && message == "off") {
-    mqttHelper.publish("TestController/light/state/mode", String(light.setOff()), true);
-  }
-
-  if(mqttHelper.onConnected()){
-    mqttHelper.subscribe("TestController/+/command/#");
-  }
-
-  //looping
+  if (mqttHelper.onConnected()) mqttHelper.subscribe("MqttAndGpio/+/command/#");
   ethHelper.loop();
   mqttHelper.loop();
-  shutter.loop();
   delay(10);
 }

@@ -20,11 +20,9 @@ void MqttHelper::messageReceived() {
 		int messageSize = _mqttClient->parseMessage();
 		if (messageSize) {
 			_topic = _mqttClient->messageTopic();
-			if (_mqttClient->available()) {
-				_message = _mqttClient->readString();
-			}
-			else {
-				_message = "";
+			_message = "";
+			while (_mqttClient->available()) {
+				_message += (char)_mqttClient->read();
 			}
 			writeSerial("MQTT message received - Topic " + _topic + "; Message " + _message);
 			_onMessageReceived = true;
@@ -41,6 +39,14 @@ void MqttHelper::init(IPAddress broker, String clientId, String user, String pas
 	if (user != "" && password != "") {
 		_mqttClient->setUsernamePassword(user, password);
 	}
+
+	// KeepAlive auf 15 Sekunden setzen (statt default 60s)
+	// um schneller zu erkennen wenn die Verbindung abbricht
+	_mqttClient->setKeepAliveInterval(15 * 1000);
+
+	// Connection Timeout auf 5 Sekunden setzen
+	// um nicht ewig auf eine Verbindung zu warten
+	_mqttClient->setConnectionTimeout(5 * 1000);
 }
 
 String MqttHelper::getLastTopic() {
@@ -52,15 +58,20 @@ String MqttHelper::getLastMessage() {
 }
 
 void MqttHelper::subscribe(String topic) {
-
-	_mqttClient->subscribe(topic, 2); //TODO war ohne qos Level
+	// QoS 0 verwenden! QoS 1/2 erzeugen ACK-Nachrichten vom Broker,
+	// die den internen Buffer der ArduinoMqttClient Library verstopfen
+	// und nach dem Senden das Empfangen von Nachrichten blockieren.
+	_mqttClient->subscribe(topic, 0); 
 
 	writeSerial("MQTT subscription - Topic " + topic);
 }
 
 void MqttHelper::publish(String topic, String message, bool retain) {
 	if (_mqttClient->connected()) {
-		_mqttClient->beginMessage(topic, retain, 2); //TODO war ma qos Level 2
+		// QoS 0 verwenden! QoS 1/2 erzeugen ACK-Nachrichten vom Broker,
+	    // die den internen Buffer der ArduinoMqttClient Library verstopfen
+	    // und nach dem Senden das Empfangen von Nachrichten blockieren.
+		_mqttClient->beginMessage(topic, retain, 0); 
 		_mqttClient->print(message);
 		_mqttClient->endMessage();
 

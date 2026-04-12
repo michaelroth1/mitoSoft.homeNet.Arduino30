@@ -1,66 +1,68 @@
 /*
- Name:		SimpleMqttUsing.ino
- Created:	1/21/2020 8:49:25 PM
- Author:	Mary
- Remarks: To test, you can use the command line tool mosquitto_pub shipped with mosquitto 
- or the mosquitto-clients package to send MQTT messages. 
- This allows you to operate your cover manually:
- mosquitto_pub -h 127.0.0.1 -t input/homeAssistant/command/set -m "SHOW"
+  Name: SimpleMqttUsing.ino
+  Short MQTT-only example: one cover and one light
 */
 
 #include <SPI.h>
 #include <Ethernet.h>
-#include <Arduino.h>
 #include <MitoSoft.h>
 
 // network configuration
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress broker(192, 168, 2, 100);
-
-EthernetHelper ethHelper(mac);
+IPAddress broker(192, 168, 2, 125);
 
 EthernetClient ethClient;
+EthernetHelper ethHelper(mac);
+MqttClient mqttClient(ethClient);
+MqttHelper mqttHelper(mqttClient);
 
-PubSubClient mqttClient(broker, 1883, ethClient);
-PubSubHelper mqttHelper(mqttClient);
-
-unsigned long lastMillis = 0;
+// single cover and light
+ShutterController cover(20000, 0);
+DigitalOutput coverUp(5, STANDARD);
+DigitalOutput coverDown(6, STANDARD);
+DigitalOutput lightOut(8, INVERTED);
 
 void setup() {
-    Serial.begin(9600);
-    Serial.println("start SimpleMqttUsing.ino");
-
-    ethHelper.dhcpSetup();
-
-    mqttHelper.init("ClientId");
-
-    Serial.println("start loop");
+  ethHelper.dhcpSetup();
+  mqttHelper.init(broker, "SimpleMqttUsing", "user", "passwd");
+  cover.referenceRun();
 }
 
 void loop() {
+  String topic = "";
+  String message = "";
 
-  String t = "";
-  String m = "";
-
-  if (mqttHelper.onMessageReceived()){
-    t = mqttHelper.getLastTopic();
-    m = mqttHelper.getLastMessage();
-  }    
-
-  if (m != "") {
-    Serial.println("Message received in MAIN LOOP: " + m);
+  if (mqttHelper.onMessageReceived()) {
+    topic = mqttHelper.getLastTopic();
+    message = mqttHelper.getLastMessage();
   }
 
-  // publish a message roughly every second.
-  if (millis() - lastMillis > 1000) {
-    lastMillis = millis();
-    mqttHelper.publish("Output2", "High");
+  // cover via MQTT
+  if (topic == "SimpleMqttUsing/cover/command/mode") {
+    if (message == "down") cover.runDown();
+    else if (message == "up") cover.runUp();
+    else if (message == "stop") cover.runStop();
+  }
+  else if (topic == "SimpleMqttUsing/cover/command/pos") {
+    cover.setShutterPosition(message.toDouble());
   }
 
-  if(mqttHelper.onConnected()){
-    mqttHelper.subscribe("input/+/command/#");
+  // light via MQTT
+  if (topic == "SimpleMqttUsing/light/command/mode") {
+    if (message == "toggle") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.toggle()), true);
+    else if (message == "on") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.setOn()), true);
+    else if (message == "off") mqttHelper.publish("SimpleMqttUsing/light/state/mode", String(lightOut.setOff()), true);
   }
-  
+
+  // publish cover state when stopped
+  if (cover.stopped()) {
+    mqttHelper.publish("SimpleMqttUsing/cover/state/pos", String(cover.getPosition()), true);
+    mqttHelper.publish("SimpleMqttUsing/cover/state/mode", "stopped", false);
+  }
+
+  cover.loop();
+
+  if (mqttHelper.onConnected()) mqttHelper.subscribe("SimpleMqttUsing/+/command/#");
   ethHelper.loop();
   mqttHelper.loop();
   delay(50);

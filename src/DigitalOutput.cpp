@@ -1,55 +1,27 @@
 #include "MitoSoft.h"
 
 DigitalOutput::DigitalOutput(int pin, int mode) {
-	// wir merken uns die Pins für die spätere Verwendung
 	this->_pin = pin;
-	this->_invertableOutput = new InvertableOutput(pin, mode);
+	this->_mode = mode;
 
-	setState(LOW);
+	pinMode(pin, OUTPUT);
+	this->setOff();
 }
 
-int DigitalOutput::toggle() {
-	if (_state == HIGH) {
-		_state = LOW;
+void DigitalOutput::setOff() {
+	if (_mode == INVERTED) {
+		digitalWrite(_pin, HIGH);
 	}
 	else {
-		_state = HIGH;
-	}
-
-	setState(_state);
-	return _state;
-}
-
-bool DigitalOutput::isToggled() {
-	if (_state != _oldState) {
-		this->_oldState = _state;
-		return true;
-	}
-
-	return false;
-}
-
-int DigitalOutput::setOn() {
-	setState(HIGH);
-	return HIGH;
-}
-
-int DigitalOutput::setOff() {
-	setState(LOW);
-	return LOW;
-}
-
-void DigitalOutput::setState(int mode) {
-	this->_state = mode;
-	this->_oldState = mode;
-	if (mode == LOW) {
-		_invertableOutput->setOff();
-	}
-	else if (mode == HIGH) {
-		_invertableOutput->setOn();
+		digitalWrite(_pin, LOW);
 	}
 }
 
-int DigitalOutput::getState() {
-	return _state;
+void DigitalOutput::setOn() {
+	if (_mode == INVERTED) {
+		digitalWrite(_pin, LOW);
+	}
+	else {
+		digitalWrite(_pin, HIGH);
+	}
 }

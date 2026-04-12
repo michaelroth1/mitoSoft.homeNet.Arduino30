@@ -9,7 +9,7 @@
 const int STANDARD = 1;
 const int INVERTED = 2;
 
-class InvertableOutput {
+class DigitalOutput {
 
 private:
 
@@ -18,7 +18,7 @@ private:
 
 public:
 
-	InvertableOutput(int pin, int mode);
+	DigitalOutput(int pin, int mode);
 
 	void setOn();
 
@@ -51,18 +51,18 @@ public:
 	bool fallingEdge();
 };
 
-class DigitalOutput {
+class LightController {
 
 private:
 
 	int _state = 0;
 	int _oldState = 0;
 	int _pin = 0;
-	InvertableOutput* _invertableOutput = nullptr;
+	DigitalOutput* _digitalOutput = nullptr;
 
 public:
 
-	DigitalOutput(int pin, int mode = STANDARD);
+	LightController(int pin, int mode = STANDARD);
 
 	bool isToggled();
 
@@ -75,6 +75,8 @@ public:
 	void setState(int mode);
 
 	int getState();
+
+	void loop();
 };
 
 class DigitalInput {
@@ -114,8 +116,8 @@ private:
 
 	int _upPin = 0;
 	int _downPin = 0;
-	InvertableOutput* _up;
-	InvertableOutput* _down;
+	DigitalOutput* _up;
+	DigitalOutput* _down;
 
 	bool _isRunning = false;
 	bool _isReferenceRun = false;
