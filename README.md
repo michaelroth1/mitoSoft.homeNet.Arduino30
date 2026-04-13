@@ -22,7 +22,7 @@ In smart homes it's easy to implement:
 
 ### GPIO Pin Usage
 
-![GPIO Wiring Example](GIPO_Image.png)
+![GPIO Wiring Example](images/GIPO_Image.png)
 
 The image above shows a typical wiring example for a button with an LED indicator.
 
@@ -57,7 +57,105 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Examples
 
-### Example 1: Simple GPIO Usage (Button-controlled Shutter)
+### Example 1: LightController Test
+
+A simple test example for the LightController class with a button toggle:
+
+![LightController Wiring](images/LightControllerTest.png)
+
+```c++
+/*
+  Name: LightControllerTest.ino
+*/
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include <MitoSoft.h>
+
+DebouncingInput button1(2);
+LightController light1(3, STANDARD); //INVERTED or STANDARD
+
+void setup() {
+  //Serial.begin(9600);
+  //Serial.println("");
+  //Serial.println("start LightController test");
+}
+
+void loop() {
+  //***************************************************************
+  // Set Light
+  //
+  if (button1.risingEdge()) {
+	light1.toggle();  
+  } 
+
+  light1.loop();
+  delay(10);
+}
+```
+
+### Example 2: ShutterController Test
+
+A simple test example for the ShutterController class with up/down buttons:
+
+![ShutterController Wiring](images/ShutterControllerTest.png)
+
+```c++
+/*
+  Name: ShutterControllerTest.ino
+*/
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include <MitoSoft.h>
+
+DebouncingInput buttonUp(2);
+DebouncingInput buttonDown(3);
+ShutterController cover1(23000, 0, -5.0, 105.0, 500);
+DigitalOutput pinUp(5, STANDARD); //INVERTED or STANDARD
+DigitalOutput pinDown(6, STANDARD); //INVERTED or STANDARD
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("");
+  Serial.println("start ShutterController test");
+
+  cover1.referenceRun();
+}
+
+void loop() {
+  //***************************************************************
+  // Set Cover
+  //
+  if (buttonDown.risingEdge()) {
+	Serial.println("Down pressed");
+	cover1.runDown();
+  } else if (buttonUp.risingEdge()) {
+	Serial.println("Up pressed");
+	cover1.runUp();
+  } 
+
+  if (cover1.started()) {
+	if (1 == cover1.getDirection()) { 
+	  Serial.println("Run Down");
+	  pinUp.setOff();
+	  pinDown.setOn();
+	} else if (2 == cover1.getDirection()) { 
+	  Serial.println("Run Up");
+	  pinUp.setOn();
+	  pinDown.setOff();
+	}
+  } else if (cover1.stopped()) {
+	pinUp.setOff();
+	pinDown.setOff();
+  }
+
+  cover1.loop();
+  delay(10);
+}
+```
+
+### Example 3: Simple GPIO Usage (Button-controlled Shutter)
 
 A simple example showing how to control a shutter with two buttons (up/down):
 
@@ -114,7 +212,7 @@ void loop() {
 }
 ```
 
-### Example 2: MQTT-only Usage
+### Example 4: MQTT-only Usage
 
 A simple MQTT example showing how to control a cover and a light via MQTT:
 
@@ -212,7 +310,7 @@ mosquitto_pub -h 192.168.2.125 -t SimpleMqttUsing/cover/command/pos -m "50"
 mosquitto_pub -h 192.168.2.125 -t SimpleMqttUsing/light/command/mode -m "toggle"
 ```
 
-### Example 3: MQTT + GPIO Combined
+### Example 5: MQTT + GPIO Combined
 
 This example shows how to control a cover and a light using both MQTT and physical buttons:
 
@@ -297,6 +395,104 @@ void loop() {
   if (mqttHelper.onConnected()) mqttHelper.subscribe("MqttAndGpio/+/command/#");
   ethHelper.loop();
   mqttHelper.loop();
+  delay(10);
+}
+```
+
+### Example 4: LightController Test
+
+A simple test example for the LightController class with a button toggle:
+
+![LightController Wiring](images/LightControllerTest.png)
+
+```c++
+/*
+  Name: LightControllerTest.ino
+*/
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include <MitoSoft.h>
+
+DebouncingInput button1(2);
+LightController light1(3, STANDARD); //INVERTED or STANDARD
+
+void setup() {
+  //Serial.begin(9600);
+  //Serial.println("");
+  //Serial.println("start LightController test");
+}
+
+void loop() {
+  //***************************************************************
+  // Set Light
+  //
+  if (button1.risingEdge()) {
+	light1.toggle();  
+  } 
+
+  light1.loop();
+  delay(10);
+}
+```
+
+### Example 5: ShutterController Test
+
+A simple test example for the ShutterController class with up/down buttons:
+
+![ShutterController Wiring](images/ShutterControllerTest.png)
+
+```c++
+/*
+  Name: ShutterControllerTest.ino
+*/
+
+#include <SPI.h>
+#include <Ethernet.h>
+#include <MitoSoft.h>
+
+DebouncingInput buttonUp(2);
+DebouncingInput buttonDown(3);
+ShutterController cover1(23000, 0, -5.0, 105.0, 500);
+DigitalOutput pinUp(5, STANDARD); //INVERTED or STANDARD
+DigitalOutput pinDown(6, STANDARD); //INVERTED or STANDARD
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("");
+  Serial.println("start ShutterController test");
+
+  cover1.referenceRun();
+}
+
+void loop() {
+  //***************************************************************
+  // Set Cover
+  //
+  if (buttonDown.risingEdge()) {
+	Serial.println("Down pressed");
+	cover1.runDown();
+  } else if (buttonUp.risingEdge()) {
+	Serial.println("Up pressed");
+	cover1.runUp();
+  } 
+
+  if (cover1.started()) {
+	if (1 == cover1.getDirection()) { 
+	  Serial.println("Run Down");
+	  pinUp.setOff();
+	  pinDown.setOn();
+	} else if (2 == cover1.getDirection()) { 
+	  Serial.println("Run Up");
+	  pinUp.setOn();
+	  pinDown.setOff();
+	}
+  } else if (cover1.stopped()) {
+	pinUp.setOff();
+	pinDown.setOff();
+  }
+
+  cover1.loop();
   delay(10);
 }
 ```
