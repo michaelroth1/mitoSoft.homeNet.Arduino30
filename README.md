@@ -76,16 +76,17 @@ DebouncingInput button1(2);
 LightController light1(3, STANDARD); //INVERTED or STANDARD
 
 void setup() {
-  //Serial.begin(9600);
-  //Serial.println("");
-  //Serial.println("start LightController test");
+  Serial.begin(9600);
+  Serial.println("");
+  Serial.println("start LightController test");
 }
 
 void loop() {
   //***************************************************************
-  // Set Light
+  // Light
   //
   if (button1.risingEdge()) {
+    Serial.println("Light toggled");
 	light1.toggle();  
   } 
 
@@ -125,7 +126,7 @@ void setup() {
 
 void loop() {
   //***************************************************************
-  // Set Cover
+  // Cover
   //
   if (buttonDown.risingEdge()) {
 	Serial.println("Down pressed");
