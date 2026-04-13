@@ -22,7 +22,7 @@ In smart homes it's easy to implement:
 
 ### GPIO Pin Usage
 
-![GPIO Wiring Example](images/GIPO_Image.png)
+![GPIO Wiring Example](images/GIPO_Image.jpg)
 
 The image above shows a typical wiring example for a button with an LED indicator.
 
@@ -61,7 +61,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 A simple test example for the LightController class with a button toggle:
 
-![LightController Wiring](images/LightControllerTest.png)
+![LightController Wiring](images/LightControllerTest.jpg)
 
 ```c++
 /*
@@ -98,7 +98,7 @@ void loop() {
 
 A simple test example for the ShutterController class with up/down buttons:
 
-![ShutterController Wiring](images/ShutterControllerTest.png)
+![ShutterController Wiring](images/ShutterControllerTest.jpg)
 
 ```c++
 /*
