@@ -194,6 +194,58 @@ public:
 	void loop();
 };
 
+class InvertedShutterController {
+
+private:
+	ShutterController* _controller;
+
+	double ConvertPosition(double position);
+
+public:
+
+	InvertedShutterController(unsigned long maxRunTime, unsigned long finOpenTime = 0, double upReferencePos = -2.0, double downReferencePos = 102.0, int reverseTime = 500, bool writeLog = false);
+
+	~InvertedShutterController();
+
+	void referenceRun();
+
+	void runDown();
+
+	void runUp();
+
+	void setPosition(double newPosition, double newFinPosition);
+
+	void setFinPosition(double newFinPosition);
+
+	void setShutterPosition(double newPosition);
+
+	void setShutterAndFinPosition(double newPosition, double newFinPosition);
+
+	void runStop();
+
+	double getFinPosition();
+
+	double getPosition();
+
+	int getDirection();
+
+	String getDirectionAsText();
+
+	bool stopped();
+
+	bool started();
+
+	bool running();
+
+	bool isReferenceRun();
+
+	unsigned long lastReferenceRun();
+
+	bool isRunning();
+
+	void loop();
+};
+
 //https://github.com/arduino-libraries/ArduinoMqttClient
 class MqttHelper {
 

@@ -36,6 +36,7 @@ void ShutterController::runDown() {
 		this->SetVariablesToInitValue();
 		_requestedDir = DOWN;
 		_requestedPos = _downReferencePos;
+		this->writeSerial("runDown() called. Current Position: " + String(_shutterPos) + "%, Target Position: " + String(_requestedPos) + "%, Direction: DOWN");
 	}
 }
 
@@ -59,6 +60,7 @@ void ShutterController::runUp() {
 		this->SetVariablesToInitValue();
 		_requestedDir = UP;
 		_requestedPos = _upReferencePos;
+		this->writeSerial("runUp() called. Current Position: " + String(_shutterPos) + "%, Target Position: " + String(_requestedPos) + "%, Direction: UP");
 	}
 }
 
@@ -98,10 +100,12 @@ void ShutterController::setFinPosition(double newFinPosition) {
 	}	
 	else if (newFinPosition < _finPos) { //um Lamellen aufzumachen, muss die Jalousie aufgefahern werden
 		double absCorrection = this->CalculateShutterCorrection(_finPos, newFinPosition);
+		this->writeSerial("Fin position requested: " + String(newFinPosition) + "% (current: " + String(_finPos) + "%, correction: " + String(absCorrection) + "%)");
 		this->setShutterPosition(_shutterPos - absCorrection);
 	}
 	else if (newFinPosition > _finPos) { //Jalousie abfahren
 		double absCorrection = this->CalculateShutterCorrection(_finPos, newFinPosition);
+		this->writeSerial("Fin position requested: " + String(newFinPosition) + "% (current: " + String(_finPos) + "%, correction: " + String(absCorrection) + "%)");
 		this->setShutterPosition(_shutterPos + absCorrection);
 	}
 }
@@ -146,10 +150,12 @@ void ShutterController::setShutterPosition(double newPosition) {
 	else if (newPosition > _shutterPos) {
 		_requestedDir = DOWN;
 		_requestedPos = newPosition;
+		this->writeSerial("Shutter position requested: " + String(newPosition) + "% (current: " + String(_shutterPos) + "%, direction: DOWN)");
 	}
 	else if (newPosition < _shutterPos) {
 		_requestedDir = UP;
 		_requestedPos = newPosition;
+		this->writeSerial("Shutter position requested: " + String(newPosition) + "% (current: " + String(_shutterPos) + "%, direction: UP)");
 	}
 }
 
@@ -172,9 +178,7 @@ void ShutterController::stop() {
 	_isRunning = false;
 	_hasStopped = true;
 	_runDir = 0;
-	
-	this->writeSerial("Shutter stopped.");
-	    
+
 	if (_shutterPos < 0.0) {
 		_shutterPos = 0;
 		_finPos = 0;
@@ -183,6 +187,8 @@ void ShutterController::stop() {
 		_shutterPos = 100.0;
 		_finPos = 100.0;
 	}
+
+	this->writeSerial("Shutter stopped. Position: " + String(_shutterPos) + "%, Fin Position: " + String(_finPos) + "%");
 
 	//Gespeicherte Position (Rolladen und Lamellen) nach Referenzfahrt anfahren
 	if (_runToPosAfterRefRunDouble >= 0) {
