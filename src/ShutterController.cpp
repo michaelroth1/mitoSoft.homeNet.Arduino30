@@ -77,10 +77,10 @@ void ShutterController::runStop() {
 void ShutterController::setPosition(double newPosition, double newFinPosition)
 {
 	if (newPosition == -1 && newFinPosition >= 0) {
-		this->setFinPosition(newPosition);
+		this->setFinPosition(newFinPosition);
 	}
 	else if (newPosition >= 0 && newFinPosition == -1) {
-		this->setShutterPosition(newFinPosition);
+		this->setShutterPosition(newPosition);
 	}
 	else if (newPosition >= 0 && newFinPosition >= 0) {
 		this->setShutterAndFinPosition(newPosition, newFinPosition);
@@ -119,7 +119,7 @@ void ShutterController::setShutterAndFinPosition(double newPosition, double newF
 		_finPosAfterRefRun = newFinPosition;
 		return;
 	}
-	else if (abs(_shutterPos - newPosition) < 1.0 && abs(this->getFinPosition() - newFinPosition) < 5.0) { //Abweichung muss mindestens 1% bzw. 5% sein
+	else if (abs(_shutterPos - newPosition) < 0.5 && abs(this->getFinPosition() - newFinPosition) < 5.0) { //Abweichung muss mindestens 1% bzw. 5% sein
 		return;
 	}	
 	else if (_shutterPos < newPosition) { //Rolladen muss nach unten
@@ -144,7 +144,7 @@ void ShutterController::setShutterPosition(double newPosition) {
 		_runToPosAfterRefRunSingle = newPosition;
 		return;
 	}
-	else if (abs(_shutterPos - newPosition) < 1.0) { //Abweichung muss mindestens 1% sein
+	else if (abs(_shutterPos - newPosition) < 0.5) { //Abweichung muss mindestens 0.5% sein
 		return;
 	}	
 	else if (newPosition > _shutterPos) {
